@@ -110,10 +110,12 @@
   (GET "/reconnect" [] (str (init)))
 
   (GET ["/:resource" :resource #"[^?]+"] [resource & params]
-    (if
-      (valid-ticket? resource (params :ticket))
-      (handle-good-ticket resource)
-      (handle-bad-ticket)))
+    (if (re-find #"\.\." resource)
+      (handle-bad-ticket)
+      (if
+        (valid-ticket? resource (params :ticket))
+        (handle-good-ticket resource)
+        (handle-bad-ticket))))
 
   (route/not-found "Not Found"))
 
