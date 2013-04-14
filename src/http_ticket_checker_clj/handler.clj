@@ -1,20 +1,43 @@
 (ns http-ticket-checker-clj.handler
   (:use compojure.core)
-  (:use [ring.util.response :only (file-response)])
+  (:use [ring.util.response :only (file-response header content-type)])
   (:require [compojure.handler :as handler]
             [compojure.route :as route])
   (:require [clojurewerkz.spyglass.client :as m])
   (:require [clojure.data.json :as json]))
 
 
-(def content_type "Thumbnails")
+(def ticket-store-atom
+  (atom nil))
 
-
-(def ticket-store
+(defn create-ticket-store []
   (m/bin-connection "alhena:11211"))
 
+(defn get-ticket-store []
+  (deref ticket-store-atom))
+
+(defn set-ticket-store [ticket-store]
+  (swap! ticket-store-atom
+    (fn [_] ticket-store)))
+
+
+(def config-atom
+  (atom nil))
+
+(defn get-config []
+  (deref config-atom))
+
+(defn set-config [config]
+  (swap! config-atom
+    (fn [_] config)))
+
+(defn load-config []
+  (load-file
+    (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))
+
+
 (defn get-ticket [ticket_id]
-  (m/get ticket-store ticket_id))
+  (m/get (get-ticket-store) ticket_id))
 
 (defn parse-ticket [raw_ticket]
   (if raw_ticket
@@ -48,7 +71,7 @@
       (let [parsed_ticket (parse-ticket ticket)]
         (if parsed_ticket
           (and
-            (= content_type (parsed_ticket :presentationType))
+            (= ((get-config) :presentation_type) (parsed_ticket :presentationType))
             (not
               (not
                 (some #{resource_id} (list
@@ -58,20 +81,35 @@
       false)))
 
 
+(defn init []
+  (do
+    (set-ticket-store (create-ticket-store))
+    (set-config (load-config))))
+
+(defn destroy []
+  (do
+    (m/shutdown (get-ticket-store))
+    (set-ticket-store nil)))
+
+
 (defn handle-good-ticket [resource]
-  (file-response resource {:root "/home/adam/src/http-ticket-checker/files"}))
+  (header
+    (file-response resource {:root ((get-config) :file_dir)})
+    "Cache-Control"
+    "no-cache"))
 
 (defn handle-bad-ticket []
-  {:status 403, :body "invalid ticket"})
+  (content-type
+    {:status 403
+     :body "ticket invalid"}
+    "text/plain"))
 
 
 (defroutes app-routes
   (GET "/ticket/:id" [id] (get-ticket id))
+  (GET "/reconnect" [] (str (init)))
 
-;  (GET ["/images/:resource" :resource #"[^?]+"] [resource & params]
-;    (str (valid-ticket? resource (params :ticket))))
-
-  (GET ["/images/:resource" :resource #"[^?]+"] [resource & params]
+  (GET ["/:resource" :resource #"[^?]+"] [resource & params]
     (if
       (valid-ticket? resource (params :ticket))
       (handle-good-ticket resource)

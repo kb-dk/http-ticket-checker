@@ -7,7 +7,7 @@
                  [clojurewerkz/spyglass "1.0.2"]]
   :plugins [[lein-ring "0.8.2"]]
   :ring {:handler http-ticket-checker-clj.handler/app
-         ;:init http-ticket-checker-clj.handler/init
-         }
+         :init http-ticket-checker-clj.handler/init
+         :destroy http-ticket-checker-clj.handler/destroy}
   :profiles
   {:dev {:dependencies [[ring-mock "0.1.3"]]}})
