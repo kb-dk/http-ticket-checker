@@ -2,8 +2,8 @@
   (:use http-ticket-checker-clj.configuration)
   (:use http-ticket-checker-clj.tickets)
   (:use compojure.core)
-  (:use [ring.util.response :only (file-response header content-type)])
-  (:require [compojure.handler :as handler]
+  (:require [ring.util.response :as response]
+            [compojure.handler :as handler]
             [compojure.route :as route])
   (:require [clojurewerkz.spyglass.client :as m]))
 
@@ -18,18 +18,27 @@
     (m/shutdown (get-ticket-store))
     (set-ticket-store nil)))
 
+(def not-found-response
+  (response/not-found "not found"))
 
-(defn handle-good-ticket [resource]
-  (header
-    (file-response resource {:root ((get-config) :file_dir)})
-    "Cache-Control"
-    "no-cache"))
-
-(defn handle-bad-ticket []
-  (content-type
+(def forbidden-response
+  (response/content-type
     {:status 403
      :body "ticket invalid"}
     "text/plain"))
+
+
+(defn handle-good-ticket [resource]
+  (let [response (response/file-response resource {:root ((get-config) :file_dir)})]
+    (if response
+      (response/header
+        response
+        "Cache-Control"
+        "no-cache")
+      not-found-response)))
+
+(defn handle-bad-ticket []
+  forbidden-response)
 
 
 (defroutes app-routes
