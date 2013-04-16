@@ -18,8 +18,12 @@
     (fn [_] ticket-store)))
 
 
-(defn get-ticket [ticket_id]
-  (m/get (get-ticket-store) ticket_id))
+(defn get-ticket [raw_ticket_id]
+  (let [ticket_id (str raw_ticket_id)]
+    (if
+      (> (count ticket_id) 0)
+      (m/get (get-ticket-store) ticket_id)
+      nil)))
 
 (defn parse-ticket [raw_ticket]
   (if raw_ticket
