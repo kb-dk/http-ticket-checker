@@ -5,8 +5,7 @@
   (:use [ring.util.response :only (file-response header content-type)])
   (:require [compojure.handler :as handler]
             [compojure.route :as route])
-  (:require [clojurewerkz.spyglass.client :as m])
-  (:require [clojure.data.json :as json]))
+  (:require [clojurewerkz.spyglass.client :as m]))
 
 
 (defn init []
