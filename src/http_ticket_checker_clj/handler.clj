@@ -45,14 +45,14 @@
   (GET "/reconnect" [] (str (init)))
 
   (GET ["/:resource" :resource #"[^?]+"] [:as request resource & params]
-    (if (re-find #"\.\." resource)
-      (handle-bad-ticket)
-      (if
-        (tickets/valid-ticket? resource (params :ticket) (request :remote-addr))
-        (handle-good-ticket resource)
-        (handle-bad-ticket))))
+    (if
+      (and
+        (not (re-find #"\.\." resource))
+        (tickets/valid-ticket? resource (params :ticket) (request :remote-addr)))
+      (handle-good-ticket resource)
+      (handle-bad-ticket)))
 
-  (route/not-found "Not Found"))
+  (route/not-found not-found-response))
 
 
 (def app
