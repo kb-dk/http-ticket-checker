@@ -1,4 +1,5 @@
 (ns http-ticket-checker-clj.handler
+  (:use http-ticket-checker-clj.configuration)
   (:use compojure.core)
   (:use [ring.util.response :only (file-response header content-type)])
   (:require [compojure.handler :as handler]
@@ -19,21 +20,6 @@
 (defn set-ticket-store [ticket-store]
   (swap! ticket-store-atom
     (fn [_] ticket-store)))
-
-
-(def config-atom
-  (atom nil))
-
-(defn get-config []
-  (deref config-atom))
-
-(defn set-config [config]
-  (swap! config-atom
-    (fn [_] config)))
-
-(defn load-config []
-  (load-file
-    (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))
 
 
 (defn get-ticket [ticket_id]
