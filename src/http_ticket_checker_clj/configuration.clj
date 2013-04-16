@@ -1,5 +1,6 @@
 (ns http-ticket-checker-clj.configuration)
 
+
 (def config-atom
   (atom nil))
 
@@ -10,6 +11,7 @@
   (swap! config-atom
     (fn [_] config)))
 
+; Load configuration from file specificed by environment variable.
 (defn load-config []
   (load-file
     (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))

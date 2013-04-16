@@ -18,6 +18,8 @@
     (fn [_] ticket-store)))
 
 
+; Get ticket from memcached, but only if the id is a string with a
+; length above 0-
 (defn get-ticket [raw_ticket_id]
   (let [ticket_id (str raw_ticket_id)]
     (if
@@ -25,6 +27,8 @@
       (m/get (get-ticket-store) ticket_id)
       nil)))
 
+; Parse a ticket from memcached, and return a map with resource ids,
+; presentation type and user identifier.
 (defn parse-ticket [raw_ticket]
   (if raw_ticket
     (let [ticket (json/read-str raw_ticket)]
@@ -36,7 +40,10 @@
           nil)))
     nil))
 
-
+; Get the resource id from the quested file:
+; The id is defined as the substring starting
+; after the first "/" and ending before the first ".",
+; e.g. a/b/c/d/resource-id-here.something.
 (defn get-resource-id [resource]
   (first
     (clojure.string/split
@@ -46,12 +53,17 @@
           #"/"))
       #"\.")))
 
-
+; Given a list of resource-ids with 'stuff' in front of the uuid,
+; return only the uuid-part,
+; e.g. uuid:abcd -> abcd.
 (defn shorten-resource-id [resource_id]
   (last
     (clojure.string/split resource_id #":")))
 
-
+; Validate a ticket against the requested resource and user identifier.
+; A ticket is considered valid if the requested resource is in the list
+; of resource from the ticket, and the client ip-adresse matches the
+; user identifier from the ticket.
 (defn valid-ticket? [resource ticket_id user-identifier]
   (let [ticket (get-ticket ticket_id)
         resource_id (get-resource-id resource)]
