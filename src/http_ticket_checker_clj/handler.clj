@@ -27,7 +27,6 @@
      :body "ticket invalid"}
     "text/plain"))
 
-
 (defn handle-good-ticket [resource]
   (let [response (response/file-response resource {:root ((get-config) :file_dir)})]
     (if response
@@ -45,11 +44,11 @@
   (GET "/ticket/:id" [id] (get-ticket id))
   (GET "/reconnect" [] (str (init)))
 
-  (GET ["/:resource" :resource #"[^?]+"] [resource & params]
+  (GET ["/:resource" :resource #"[^?]+"] [:as request resource & params]
     (if (re-find #"\.\." resource)
       (handle-bad-ticket)
       (if
-        (valid-ticket? resource (params :ticket))
+        (valid-ticket? resource (params :ticket) (request :remote-addr))
         (handle-good-ticket resource)
         (handle-bad-ticket))))
 

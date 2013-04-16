@@ -52,7 +52,7 @@
     (clojure.string/split resource_id #":")))
 
 
-(defn valid-ticket? [resource ticket_id]
+(defn valid-ticket? [resource ticket_id user-identifier]
   (let [ticket (get-ticket ticket_id)
         resource_id (get-resource-id resource)]
     (if (and ticket resource_id)
@@ -60,6 +60,7 @@
         (if parsed_ticket
           (and
             (= ((get-config) :presentation_type) (parsed_ticket :presentationType))
+            (= user-identifier (parsed_ticket :userIdentifier))
             (not
               (not
                 (some #{resource_id} (list
