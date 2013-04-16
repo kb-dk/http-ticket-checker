@@ -1,7 +1,7 @@
 (ns http-ticket-checker-clj.tickets
   (:use http-ticket-checker-clj.configuration)
-  (:require [clojurewerkz.spyglass.client :as m])
-  (:require [clojure.data.json :as json]))
+  (:require [clojurewerkz.spyglass.client :as m]
+            [clojure.data.json :as json]))
 
 
 (def ticket-store-atom

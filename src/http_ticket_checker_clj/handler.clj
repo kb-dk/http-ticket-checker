@@ -1,22 +1,22 @@
 (ns http-ticket-checker-clj.handler
-  (:use http-ticket-checker-clj.configuration)
-  (:use http-ticket-checker-clj.tickets)
-  (:use compojure.core)
-  (:require [ring.util.response :as response]
+  (:use [compojure.core])
+  (:require [http-ticket-checker-clj.configuration :as config]
+            [http-ticket-checker-clj.tickets :as tickets]
+            [ring.util.response :as response]
             [compojure.handler :as handler]
-            [compojure.route :as route])
-  (:require [clojurewerkz.spyglass.client :as m]))
+            [compojure.route :as route]
+            [clojurewerkz.spyglass.client :as m]))
 
 
 (defn init []
   (do
-    (set-ticket-store (create-ticket-store))
-    (set-config (load-config))))
+    (tickets/set-ticket-store (tickets/create-ticket-store))
+    (config/set-config (config/load-config))))
 
 (defn destroy []
   (do
-    (m/shutdown (get-ticket-store))
-    (set-ticket-store nil)))
+    (m/shutdown (tickets/get-ticket-store))
+    (tickets/set-ticket-store nil)))
 
 (def not-found-response
   (response/not-found "not found"))
@@ -28,7 +28,7 @@
     "text/plain"))
 
 (defn handle-good-ticket [resource]
-  (let [response (response/file-response resource {:root ((get-config) :file_dir)})]
+  (let [response (response/file-response resource {:root ((config/get-config) :file_dir)})]
     (if response
       (response/header
         response
@@ -41,14 +41,14 @@
 
 
 (defroutes app-routes
-  (GET "/ticket/:id" [id] (get-ticket id))
+  (GET "/ticket/:id" [id] (tickets/get-ticket id))
   (GET "/reconnect" [] (str (init)))
 
   (GET ["/:resource" :resource #"[^?]+"] [:as request resource & params]
     (if (re-find #"\.\." resource)
       (handle-bad-ticket)
       (if
-        (valid-ticket? resource (params :ticket) (request :remote-addr))
+        (tickets/valid-ticket? resource (params :ticket) (request :remote-addr))
         (handle-good-ticket resource)
         (handle-bad-ticket))))
 
