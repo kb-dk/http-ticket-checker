@@ -62,7 +62,7 @@
       (handle-good-ticket resource)
       (handle-bad-ticket)))
 
-  ; Repond with not-found-response on 404's.
+  ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))
 
 ; Create the application.
