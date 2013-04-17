@@ -33,13 +33,15 @@
 
 ; Logic for processing valid tickets.
 (defn handle-good-ticket [resource]
-  (let [response (response/file-response resource {:root ((config/get-config) :file_dir)})]
-    (if response
-      (response/header
-        response
-        "Cache-Control"
-        "no-cache")
-      not-found-response)))
+  (if (config/use-x-sendfile)
+    (response/header {:status 200} "X-Sendfile" (str ((config/get-config) :file_dir) \/ resource))
+    (let [response (response/file-response resource {:root ((config/get-config) :file_dir)})]
+      (if response
+        (response/header
+          response
+          "Cache-Control"
+          "no-cache")
+        not-found-response))))
 
 ; Logic for processing invalid tickets.
 (defn handle-bad-ticket []

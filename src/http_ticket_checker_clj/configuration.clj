@@ -15,3 +15,6 @@
 (defn load-config []
   (load-file
     (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))
+
+(defn use-x-sendfile []
+  ((get-config) :use_x_sendfile))

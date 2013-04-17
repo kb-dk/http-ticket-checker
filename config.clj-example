@@ -1,2 +1,3 @@
 {:file_dir "/foo/bar/files"
- :presentation_type "Thumbnails"}
+ :presentation_type "Thumbnails"
+ :use_x_sendfile false}
