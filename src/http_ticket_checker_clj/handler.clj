@@ -49,9 +49,6 @@
 
 ; Various routes we respond to.
 (defroutes app-routes
-  (GET "/ticket/:id" [id] (tickets/get-ticket id))
-  (GET "/reconnect" [] (str (init)))
-
   ; Resources can be basically any path, except paths containing "..".
   ; * The ring request will be mapped to the request-var.
   ; * The resource will be mapped to the resource-var.
