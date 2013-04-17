@@ -1,3 +1,5 @@
+;; ## Retrieval of configurations
+
 (ns http-ticket-checker-clj.configuration)
 
 

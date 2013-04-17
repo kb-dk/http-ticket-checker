@@ -4,7 +4,7 @@ FIXME
 
 ## Prerequisites
 
-You will need [Leiningen][1] 1.7.0 or above installed.
+You will need [Leiningen][1] 2.x installed.
 
 [1]: https://github.com/technomancy/leiningen
 
@@ -14,6 +14,9 @@ To start a web server for the application, run:
 
     lein ring server
 
-## License
+## Generating documentation
 
-Copyright © 2013 FIXME
+To generate a nicely formatted html-page from the inline-documetation, run.
+
+    lein marg
+
