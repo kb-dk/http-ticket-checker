@@ -1,9 +1,9 @@
 ;; ## HTTP requests and -responses, other tidbits in connection with ring.
 
-(ns http-ticket-checker-clj.handler
+(ns http-ticket-checker.handler
   (:use [compojure.core])
-  (:require [http-ticket-checker-clj.configuration :as config]
-            [http-ticket-checker-clj.tickets :as tickets]
+  (:require [http-ticket-checker.configuration :as config]
+            [http-ticket-checker.tickets :as tickets]
             [ring.util.response :as response]
             [compojure.handler :as handler]
             [compojure.route :as route]

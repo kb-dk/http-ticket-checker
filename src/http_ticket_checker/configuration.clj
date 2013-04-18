@@ -1,6 +1,6 @@
 ;; ## Handling of configuration.
 
-(ns http-ticket-checker-clj.configuration)
+(ns http-ticket-checker.configuration)
 
 
 (def config

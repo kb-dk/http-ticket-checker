@@ -1,7 +1,7 @@
 ;; ## Retrieval and validation of tickets.
 
-(ns http-ticket-checker-clj.tickets
-  (:require [http-ticket-checker-clj.configuration :as config]
+(ns http-ticket-checker.tickets
+  (:require [http-ticket-checker.configuration :as config]
             [clojurewerkz.spyglass.client :as m]
             [clojure.data.json :as json]))
 
