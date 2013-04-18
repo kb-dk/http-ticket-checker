@@ -26,7 +26,9 @@
 
 (def not-found-response
   "Ring reponse used for 404 requests."
-  (response/not-found "not found"))
+  (response/content-type
+    (response/not-found "not found")
+    "text/plain"))
 
 (def forbidden-response
   "Ring response used for 403 requests."
