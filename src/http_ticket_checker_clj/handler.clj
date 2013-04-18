@@ -51,6 +51,14 @@
 
 ;; Various routes we respond to.
 (defroutes app-routes
+  (GET "/reload" [:as request]
+    (if (= (request :remote-addr) "127.0.0.1")
+      (do
+        (destroy)
+        (init)
+        {:status 200 :body (pr-str (config/get-config))})
+      {:status 403 :body "forbidden"}))
+
   ; Resources can be basically any path, except paths containing "..".
   ; * The ring request will be mapped to the request-var.
   ; * The resource will be mapped to the resource-var.
