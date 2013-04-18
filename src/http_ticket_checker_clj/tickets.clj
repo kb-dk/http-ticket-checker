@@ -1,8 +1,8 @@
 ;; ## Retrieval and validation of tickets.
 
 (ns http-ticket-checker-clj.tickets
-  (:use http-ticket-checker-clj.configuration)
-  (:require [clojurewerkz.spyglass.client :as m]
+  (:require [http-ticket-checker-clj.configuration :as config]
+            [clojurewerkz.spyglass.client :as m]
             [clojure.data.json :as json]))
 
 
@@ -10,7 +10,7 @@
   (atom nil))
 
 (defn create-ticket-store []
-  (m/bin-connection "alhena:11211"))
+  (m/bin-connection (config/get-config-param :memcached)))
 
 (defn get-ticket-store []
   (deref ticket-store-atom))
@@ -73,7 +73,7 @@
       (let [parsed_ticket (parse-ticket ticket)]
         (if parsed_ticket
           (and
-            (= ((get-config) :presentation_type) (parsed_ticket :presentationType))
+            (= ((config/get-config) :presentation_type) (parsed_ticket :presentationType))
             (= user-identifier (parsed_ticket :userIdentifier))
             (not
               (not

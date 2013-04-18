@@ -13,8 +13,8 @@
 ;; Create the connection to memcached, and load the configuration.
 (defn init []
   (do
-    (tickets/set-ticket-store (tickets/create-ticket-store))
-    (config/set-config (config/load-config))))
+    (config/set-config (config/load-config))
+    (tickets/set-ticket-store (tickets/create-ticket-store))))
 
 ;; Shutdown the connection to memcached.
 (defn destroy []
