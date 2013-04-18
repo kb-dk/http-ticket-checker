@@ -51,8 +51,9 @@
 (defn get-resource-id
   "Get the resource id from the quested file.
    The id is defined as the substring starting
-   after the first '/' and ending before the first '.',
-   e.g. a/b/c/d/resource-id-here.something."
+   after the first `/` and ending before the first `.`.
+
+   E.g. `a/b/c/d/resource-id-here.something`."
   [resource]
   (first
     (clojure.string/split
@@ -64,17 +65,21 @@
 
 (defn shorten-resource-id
   "Given a list of resource-ids with 'stuff' in front of the uuid,
-   return only the uuid-part,
-   e.g. uuid:abcd -> abcd."
+   return only the uuid-part.
+
+   E.g. uuid:abcd -> abcd."
   [resource_id]
   (last
     (clojure.string/split resource_id #":")))
 
 (defn valid-ticket?
   "Validate a ticket against the requested resource and user identifier.
-   A ticket is considered valid if the requested resource is in the list
-   of resource from the ticket, and the client ip-adresse matches the
-   user identifier from the ticket."
+
+   A ticket is considered valid iff
+
+   * the presentation-type from configurations matches the one from the ticket
+   * the requested resource is in the list of resources from the ticket
+   * the client ip-adresse matches the user identifier from the ticket."
   [resource ticket_id user-identifier]
   (let [ticket (get-ticket ticket_id)
         resource_id (get-resource-id resource)]

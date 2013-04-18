@@ -20,7 +20,7 @@
 
 (defn load-config
   "Load configuration from the file specificed by the environment
-  variable \"HTTP_TICKET_CHECKER_CONFIG\""
+  variable `\"HTTP_TICKET_CHECKER_CONFIG\"`"
   []
   (load-file
     (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))
