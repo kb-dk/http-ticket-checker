@@ -6,32 +6,38 @@
             [clojure.data.json :as json]))
 
 
-(def ticket-store-atom
+(def ticket-store
+  "Atom which holds the connection to the ticket store."
   (atom nil))
 
-(defn create-ticket-store []
-  (m/bin-connection (config/get-config-param :memcached)))
+(defn create-ticket-store
+  "Create a connection to the ticket-store specified in the
+  configuration file."
+  []
+  (m/bin-connection (config/get-config :memcached)))
 
 (defn get-ticket-store []
-  (deref ticket-store-atom))
+  (deref ticket-store))
 
-(defn set-ticket-store [ticket-store]
-  (swap! ticket-store-atom
-    (fn [_] ticket-store)))
+(defn set-ticket-store [new-ticket-store]
+  (swap! ticket-store
+    (fn [_] new-ticket-store)))
 
 
-;; Get ticket from memcached, but only if the id is a string with a
-;; length above 0.
-(defn get-ticket [raw_ticket_id]
+(defn get-ticket
+  "Get ticket from memcached, but only if the id is a string with a
+  length above 0."
+  [raw_ticket_id]
   (let [ticket_id (str raw_ticket_id)]
     (if
       (> (count ticket_id) 0)
       (m/get (get-ticket-store) ticket_id)
       nil)))
 
-;; Parse a ticket from memcached, and return a map with resource ids,
-;; presentation type and user identifier.
-(defn parse-ticket [raw_ticket]
+(defn parse-ticket
+  "Parse a ticket from memcached, and return a map with resource ids,
+  presentation type and user identifier."
+  [raw_ticket]
   (if raw_ticket
     (let [ticket (json/read-str raw_ticket)]
       (let [resource_ids (ticket "resources")
@@ -42,11 +48,12 @@
           nil)))
     nil))
 
-;; Get the resource id from the quested file:
-;; The id is defined as the substring starting
-;; after the first "/" and ending before the first ".",
-;; e.g. a/b/c/d/resource-id-here.something.
-(defn get-resource-id [resource]
+(defn get-resource-id
+  "Get the resource id from the quested file.
+   The id is defined as the substring starting
+   after the first '/' and ending before the first '.',
+   e.g. a/b/c/d/resource-id-here.something."
+  [resource]
   (first
     (clojure.string/split
       (last
@@ -55,18 +62,20 @@
           #"/"))
       #"\.")))
 
-;; Given a list of resource-ids with 'stuff' in front of the uuid,
-;; return only the uuid-part,
-;; e.g. uuid:abcd -> abcd.
-(defn shorten-resource-id [resource_id]
+(defn shorten-resource-id
+  "Given a list of resource-ids with 'stuff' in front of the uuid,
+   return only the uuid-part,
+   e.g. uuid:abcd -> abcd."
+  [resource_id]
   (last
     (clojure.string/split resource_id #":")))
 
-;; Validate a ticket against the requested resource and user identifier.
-;; A ticket is considered valid if the requested resource is in the list
-;; of resource from the ticket, and the client ip-adresse matches the
-;; user identifier from the ticket.
-(defn valid-ticket? [resource ticket_id user-identifier]
+(defn valid-ticket?
+  "Validate a ticket against the requested resource and user identifier.
+   A ticket is considered valid if the requested resource is in the list
+   of resource from the ticket, and the client ip-adresse matches the
+   user identifier from the ticket."
+  [resource ticket_id user-identifier]
   (let [ticket (get-ticket ticket_id)
         resource_id (get-resource-id resource)]
     (if (and ticket resource_id)

@@ -10,32 +10,35 @@
             [clojurewerkz.spyglass.client :as m]))
 
 
-;; Create the connection to memcached, and load the configuration.
-(defn init []
+(defn init
+  "Create the connection to memcached, and load the configuration."
+  []
   (do
     (config/set-config (config/load-config))
     (tickets/set-ticket-store (tickets/create-ticket-store))))
 
-;; Shutdown the connection to memcached.
-(defn destroy []
+(defn destroy
+  "Shutdown the connection to memcached, and clear the configuration."
+  []
   (do
     (m/shutdown (tickets/get-ticket-store))
     (tickets/set-ticket-store nil)))
 
-;; Ring reponse used for 404 requests.
 (def not-found-response
+  "Ring reponse used for 404 requests."
   (response/not-found "not found"))
 
-;; Ring response used for 403 requests.
 (def forbidden-response
+  "Ring response used for 403 requests."
   (response/content-type
     {:status 403
      :body "ticket invalid"}
     "text/plain"))
 
-;; Logic for processing valid tickets.
-(defn handle-good-ticket [resource]
-  (if (config/use-x-sendfile)
+(defn handle-good-ticket
+  "Logic for processing valid tickets."
+  [resource]
+  (if (config/get-config :use_x_sendfile)
     (response/header {:status 200} "X-Sendfile" (str ((config/get-config) :file_dir) \/ resource))
     (let [response (response/file-response resource {:root ((config/get-config) :file_dir)})]
       (if response
@@ -45,12 +48,13 @@
           "no-cache")
         not-found-response))))
 
-;; Logic for processing invalid tickets.
-(defn handle-bad-ticket []
+(defn handle-bad-ticket
+  "Logic for processing invalid tickets."
+  []
   forbidden-response)
 
-;; Various routes we respond to.
 (defroutes app-routes
+  "Various routes we respond to."
   (GET "/reload" [:as request]
     (if (= (request :remote-addr) "127.0.0.1")
       (do
@@ -74,6 +78,6 @@
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))
 
-;; Create the application.
 (def app
+  "Create the application."
   (handler/site app-routes))

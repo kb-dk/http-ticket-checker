@@ -1,25 +1,26 @@
-;; ## Retrieval of configurations
+;; ## Handling of configuration.
 
 (ns http-ticket-checker-clj.configuration)
 
 
-(def config-atom
+(def config
+  "Atom which holds the configuration."
   (atom nil))
 
-(defn get-config []
-  (deref config-atom))
+(defn get-config
+  "Get the entire configuration, or get a specific value by passing
+  in the name of it."
+  ([] (deref config))
+  ([key] ((get-config) key)))
 
-(defn set-config [config]
-  (swap! config-atom
-    (fn [_] config)))
+(defn set-config
+  [new-config]
+  (swap! config
+    (fn [_] new-config)))
 
-; Load configuration from file specificed by environment variable.
-(defn load-config []
+(defn load-config
+  "Load configuration from the file specificed by the environment
+  variable \"HTTP_TICKET_CHECKER_CONFIG\""
+  []
   (load-file
     (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))
-
-(defn get-config-param [param]
-  ((get-config) param))
-
-(defn use-x-sendfile []
-  (get-config-param :use_x_sendfile))
