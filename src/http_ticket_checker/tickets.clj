@@ -10,14 +10,20 @@
   "Atom which holds the connection to the ticket store."
   (atom nil))
 
-(defn create-ticket-store
-  "Create a connection to the ticket-store specified in the
-  configuration file."
-  []
-  (m/bin-connection (config/get-config :memcached)))
-
 (defn get-ticket-store []
   (deref ticket-store))
+
+(defn create-ticket-store
+  "Create a ticket-store pointing to the memcached host specified
+  in the configuration file.
+
+  A ticket-store is a map with at least one value called `:get`, which
+  should be a 1-ary function that recieves a value from the store.
+  Other keys in the map can be used at will, e.g. for storing a
+  connection."
+  []
+  {:get #(m/get ((get-ticket-store) :connection) %1)
+   :connection (m/bin-connection (config/get-config :memcached))})
 
 (defn set-ticket-store [new-ticket-store]
   (swap! ticket-store
@@ -31,7 +37,7 @@
   (let [ticket_id (str raw_ticket_id)]
     (if
       (> (count ticket_id) 0)
-      (m/get (get-ticket-store) ticket_id)
+      (((get-ticket-store) :get) ticket_id)
       nil)))
 
 (defn parse-ticket
