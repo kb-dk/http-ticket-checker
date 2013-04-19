@@ -80,9 +80,8 @@
    * the presentation-type from configurations matches the one from the ticket
    * the requested resource is in the list of resources from the ticket
    * the client ip-adresse matches the user identifier from the ticket."
-  [resource ticket_id user-identifier]
-  (let [ticket (get-ticket ticket_id)
-        resource_id (get-resource-id resource)]
+  [resource ticket user-identifier]
+  (let [resource_id (get-resource-id resource)]
     (if (and ticket resource_id)
       (let [parsed_ticket (parse-ticket ticket)]
         (if parsed_ticket

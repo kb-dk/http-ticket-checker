@@ -70,12 +70,13 @@
   ; * The resource will be mapped to the resource-var.
   ; * request parameters will end up in the params-map-
   (GET ["/:resource" :resource #"[^?]+"] [:as request resource & params]
-    (if
-      (and
-        (not (re-find #"\.\." resource)) ; the resource should not contain ".."
-        (tickets/valid-ticket? resource (params :ticket) (request :remote-addr))) ; remote-addr contains the client ip
-      (handle-good-ticket resource)
-      (handle-bad-ticket)))
+    (let [ticket (tickets/get-ticket (params :ticket))]
+      (if
+        (and
+          (not (re-find #"\.\." resource)) ; the resource should not contain ".."
+          (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
+        (handle-good-ticket resource)
+        (handle-bad-ticket))))
 
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))
