@@ -96,6 +96,4 @@
             (not
               (not
                 (some #{resource_id}
-                  (list
-                    (last
-                      (map shorten-resource-id (parsed_ticket :resource_ids)))))))))))))
+                  (map shorten-resource-id (parsed_ticket :resource_ids)))))))))))
