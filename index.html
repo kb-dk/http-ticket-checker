@@ -3106,12 +3106,13 @@ net.brehaut.ClojureTools = (function (SH) {
   ; * The resource will be mapped to the resource-var.
   ; * request parameters will end up in the params-map-
   (GET [&quot;/:resource&quot; :resource #&quot;[^?]+&quot;] [:as request resource &amp; params]
-    (if
-      (and
-        (not (re-find #&quot;\.\.&quot; resource)) ; the resource should not contain &quot;..&quot;
-        (tickets/valid-ticket? resource (params :ticket) (request :remote-addr))) ; remote-addr contains the client ip
-      (handle-good-ticket resource)
-      (handle-bad-ticket)))
+    (let [ticket (tickets/get-ticket (params :ticket))]
+      (if
+        (and
+          (not (re-find #&quot;\.\.&quot; resource)) ; the resource should not contain &quot;..&quot;
+          (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
+        (handle-good-ticket resource)
+        (handle-bad-ticket))))
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))</pre></td></tr><tr><td class="docs"><p>Create the application.</p>
 </td><td class="codes"><pre class="brush: clojure">(def app
@@ -3122,13 +3123,19 @@ net.brehaut.ClojureTools = (function (SH) {
             [clojurewerkz.spyglass.client :as m]
             [clojure.data.json :as json]))</pre></td></tr><tr><td class="docs"><p>Atom which holds the connection to the ticket store.</p>
 </td><td class="codes"><pre class="brush: clojure">(def ticket-store
-  (atom nil))</pre></td></tr><tr><td class="docs"><p>Create a connection to the ticket-store specified in the
-  configuration file.</p>
+  (atom nil))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn get-ticket-store []
+  (deref ticket-store))</pre></td></tr><tr><td class="docs"><p>Create a ticket-store pointing to the memcached host specified
+  in the configuration file.</p>
+
+<p>  A ticket-store is a map with at least one value called <code>:get</code>, which
+  should be a 1-ary function that recieves a value from the store.
+  Other keys in the map can be used at will, e.g. for storing a
+  connection.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-ticket-store
   []
-  (m/bin-connection (config/get-config :memcached)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn get-ticket-store []
-  (deref ticket-store))</pre></td></tr><tr><td class="docs">
+  {:get #(m/get ((get-ticket-store) :connection) %1)
+   :connection (m/bin-connection (config/get-config :memcached))})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn set-ticket-store [new-ticket-store]
   (swap! ticket-store
     (fn [_] new-ticket-store)))</pre></td></tr><tr><td class="docs"><p>Get ticket from memcached, but only if the id is a string with a
@@ -3138,7 +3145,7 @@ net.brehaut.ClojureTools = (function (SH) {
   (let [ticket_id (str raw_ticket_id)]
     (if
       (&gt; (count ticket_id) 0)
-      (m/get (get-ticket-store) ticket_id)
+      (((get-ticket-store) :get) ticket_id)
       nil)))</pre></td></tr><tr><td class="docs"><p>Parse a ticket from memcached, and return a map with resource ids,
   presentation type and user identifier.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn parse-ticket
@@ -3181,9 +3188,8 @@ net.brehaut.ClojureTools = (function (SH) {
 <li>the client ip-adresse matches the user identifier from the ticket.</li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn valid-ticket?
-  [resource ticket_id user-identifier]
-  (let [ticket (get-ticket ticket_id)
-        resource_id (get-resource-id resource)]
+  [resource ticket user-identifier]
+  (let [resource_id (get-resource-id resource)]
     (if (and ticket resource_id)
       (let [parsed_ticket (parse-ticket ticket)]
         (if parsed_ticket
