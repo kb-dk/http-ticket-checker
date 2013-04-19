@@ -37,8 +37,7 @@
   (let [ticket_id (str raw_ticket_id)]
     (if
       (> (count ticket_id) 0)
-      (((get-ticket-store) :get) ticket_id)
-      nil)))
+      (((get-ticket-store) :get) ticket_id))))
 
 (defn parse-ticket
   "Parse a ticket from memcached, and return a map with resource ids,
@@ -50,9 +49,9 @@
             presentationType (ticket "type")
             userIdentifier (ticket "userIdentifier")]
         (if (and resource_ids type userIdentifier)
-          {:resource_ids resource_ids :presentationType presentationType :userIdentifier userIdentifier}
-          nil)))
-    nil))
+          {:resource_ids resource_ids
+           :presentationType presentationType
+           :userIdentifier userIdentifier})))))
 
 (defn get-resource-id
   "Get the resource id from the quested file.
@@ -96,8 +95,7 @@
             (= user-identifier (parsed_ticket :userIdentifier))
             (not
               (not
-                (some #{resource_id} (list
-                                       (last
-                                         (map shorten-resource-id (parsed_ticket :resource_ids))))))))
-          false))
-      false)))
+                (some #{resource_id}
+                  (list
+                    (last
+                      (map shorten-resource-id (parsed_ticket :resource_ids)))))))))))))
