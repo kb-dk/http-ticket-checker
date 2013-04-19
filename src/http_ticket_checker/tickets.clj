@@ -26,8 +26,7 @@
    :connection (m/bin-connection (config/get-config :memcached))})
 
 (defn set-ticket-store [new-ticket-store]
-  (swap! ticket-store
-    (fn [_] new-ticket-store)))
+  (reset! ticket-store new-ticket-store))
 
 
 (defn get-ticket

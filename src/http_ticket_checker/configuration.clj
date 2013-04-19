@@ -15,8 +15,7 @@
 
 (defn set-config
   [new-config]
-  (swap! config
-    (fn [_] new-config)))
+  (reset! config new-config))
 
 (defn load-config
   "Load configuration from the file specificed by the environment
