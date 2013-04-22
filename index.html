@@ -3044,8 +3044,7 @@ net.brehaut.ClojureTools = (function (SH) {
   ([key] ((get-config) key)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn set-config
   [new-config]
-  (swap! config
-    (fn [_] new-config)))</pre></td></tr><tr><td class="docs"><p>Load configuration from the file specificed by the environment
+  (reset! config new-config))</pre></td></tr><tr><td class="docs"><p>Load configuration from the file specificed by the environment
   variable <code>"HTTP_TICKET_CHECKER_CONFIG"</code></p>
 </td><td class="codes"><pre class="brush: clojure">(defn load-config
   []
@@ -3137,8 +3136,7 @@ net.brehaut.ClojureTools = (function (SH) {
   {:get #(m/get ((get-ticket-store) :connection) %1)
    :connection (m/bin-connection (config/get-config :memcached))})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn set-ticket-store [new-ticket-store]
-  (swap! ticket-store
-    (fn [_] new-ticket-store)))</pre></td></tr><tr><td class="docs"><p>Get ticket from memcached, but only if the id is a string with a
+  (reset! ticket-store new-ticket-store))</pre></td></tr><tr><td class="docs"><p>Get ticket from memcached, but only if the id is a string with a
   length above 0.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-ticket
   [raw_ticket_id]
