@@ -1,4 +1,4 @@
-# http-ticket-checker-clj
+# http-ticket-checker
 
 FIXME
 
