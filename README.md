@@ -16,7 +16,7 @@ To start a web server for the application, run:
 
 ## Generating documentation
 
-To generate a nicely formatted html-page from the inline-documetation, run.
+To generate a nicely formatted html-page from the inline-documetation, run:
 
     lein marg
 
