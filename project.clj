@@ -12,5 +12,4 @@
   :ring {:handler http-ticket-checker.handler/app
          :init http-ticket-checker.handler/init
          :destroy http-ticket-checker.handler/destroy}
-  :profiles
-  {:dev {:dependencies [[ring-mock "0.1.3"]]}})
+  :profiles {:dev {:dependencies [[ring-mock "0.1.3"]]}})
