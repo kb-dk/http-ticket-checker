@@ -17,13 +17,25 @@
   "Create a ticket-store pointing to the memcached host specified
   in the configuration file.
 
-  A ticket-store is a map with at least one value called `:get`, which
-  should be a 1-ary function that recieves a value from the store.
+  A ticket-store is a map with at least one key:
+
+  * `:get`: 1-ary function used for retrieving a value from the store.
+
+  Optional keys:
+
+  * `:shutdown`: 0-ary function which should shutdown any connections
+  to the store.
+
   Other keys in the map can be used at will, e.g. for storing a
   connection."
   []
-  {:get #(m/get ((get-ticket-store) :connection) %1)
-   :connection (m/bin-connection (config/get-config :memcached))})
+  {:connection (m/bin-connection (config/get-config :memcached))
+   :get #(m/get ((get-ticket-store) :connection) %1)
+   :shutdown #(m/shutdown ((get-ticket-store) :connection))})
+
+(defn shutdown-ticket-store []
+  (let [shutdown-fn (:shutdown (get-ticket-store))]
+    (if shutdown-fn (shutdown-fn))))
 
 (defn set-ticket-store [new-ticket-store]
   (reset! ticket-store new-ticket-store))

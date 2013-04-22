@@ -22,7 +22,7 @@
   "Shutdown the connection to memcached, and clear the configuration."
   []
   (do
-    (m/shutdown (tickets/get-ticket-store))
+    (tickets/shutdown-ticket-store)
     (tickets/set-ticket-store nil)))
 
 (def not-found-response
