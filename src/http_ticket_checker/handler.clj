@@ -7,7 +7,8 @@
             [ring.util.response :as response]
             [compojure.handler :as handler]
             [compojure.route :as route]
-            [clojurewerkz.spyglass.client :as m]))
+            [clojurewerkz.spyglass.client :as m]
+            [clojure.tools.logging :as log]))
 
 
 (defn init
@@ -55,6 +56,27 @@
   []
   forbidden-response)
 
+(defn log-event
+  "Used for logging requests. Returns the response."
+  [prefix ticket resource response]
+  (do
+    (log/debug
+      (format "%s (resource: \"%s\", ticket: \"%s\", response-code: \"%s\")"
+        prefix resource ticket (response :status)))
+    response))
+
+(defn log-success
+  "Wrapper around `log-event` that adds a positive-sounding
+  prefix to the log message."
+  [ticket resource response]
+  (log-event "authorized" ticket resource response))
+
+(defn log-failure
+  "Wrapper around `log-event` that adds a negative-sounding
+  prefix to the log message."
+  [ticket resource response]
+  (log-event "failed" ticket resource response))
+
 (defroutes app-routes
   "Various routes we respond to."
   (GET "/reload" [:as request]
@@ -75,8 +97,10 @@
         (and
           (not (re-find #"\.\." resource)) ; the resource should not contain ".."
           (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
-        (handle-good-ticket resource)
-        (handle-bad-ticket))))
+        (let [response (handle-good-ticket resource)]
+          (log-success (params :ticket) resource response))
+        (let [response (handle-bad-ticket)]
+          (log-failure (params :ticket) resource response)))))
 
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))
