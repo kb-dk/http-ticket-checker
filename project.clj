@@ -2,7 +2,7 @@
   :description "HTTP-ticket-checker is a web-application that serves resources iff the supplied ticket is valid.
   Tickets are retrieved from memcached, deserialized from json, and compared with the requested resource,
   client ip-address, and the configured presentation-type."
-  :url "https://github.com/adamtulinius/http-ticket-checker"
+  :url "http://statsbiblioteket.github.io/http-ticket-checker/"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/data.json "0.2.2"]
                  [compojure "1.1.5"]
