@@ -3033,7 +3033,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </script><title>http-ticket-checker -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">http-ticket-checker</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>HTTP-ticket-checker is a web-application that serves resources iff the supplied ticket is valid.
   Tickets are retrieved from memcached, deserialized from json, and compared with the requested resource,
   client ip-address, and the configured presentation-type.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.clojure/data.json</td><td class="dotted"><hr /></td><td class="dep-version">0.2.2</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">clojurewerkz/spyglass</td><td class="dotted"><hr /></td><td class="dep-version">1.0.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#http-ticket-checker.configuration">http-ticket-checker.configuration</a></li><li><a href="#http-ticket-checker.handler">http-ticket-checker.handler</a></li><li><a href="#http-ticket-checker.tickets">http-ticket-checker.tickets</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#http-ticket-checker.configuration" name="http-ticket-checker.configuration"><h1 class="project-name">http-ticket-checker.configuration</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Handling of configuration.</h2>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.clojure/data.json</td><td class="dotted"><hr /></td><td class="dep-version">0.2.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.6</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">clojurewerkz/spyglass</td><td class="dotted"><hr /></td><td class="dep-version">1.0.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#http-ticket-checker.configuration">http-ticket-checker.configuration</a></li><li><a href="#http-ticket-checker.handler">http-ticket-checker.handler</a></li><li><a href="#http-ticket-checker.tickets">http-ticket-checker.tickets</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#http-ticket-checker.configuration" name="http-ticket-checker.configuration"><h1 class="project-name">http-ticket-checker.configuration</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Handling of configuration.</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns http-ticket-checker.configuration)</pre></td></tr><tr><td class="docs"><p>Atom which holds the configuration.</p>
 </td><td class="codes"><pre class="brush: clojure">(def config
@@ -3058,7 +3058,8 @@ net.brehaut.ClojureTools = (function (SH) {
             [ring.util.response :as response]
             [compojure.handler :as handler]
             [compojure.route :as route]
-            [clojurewerkz.spyglass.client :as m]))</pre></td></tr><tr><td class="docs"><p>Create the connection to memcached, and load the configuration.</p>
+            [clojurewerkz.spyglass.client :as m]
+            [clojure.tools.logging :as log]))</pre></td></tr><tr><td class="docs"><p>Create the connection to memcached, and load the configuration.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn init
   []
   (do
@@ -3067,7 +3068,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn destroy
   []
   (do
-    (m/shutdown (tickets/get-ticket-store))
+    (tickets/shutdown-ticket-store)
     (tickets/set-ticket-store nil)))</pre></td></tr><tr><td class="docs"><p>Ring reponse used for 404 requests.</p>
 </td><td class="codes"><pre class="brush: clojure">(def not-found-response
   (response/content-type
@@ -3091,7 +3092,22 @@ net.brehaut.ClojureTools = (function (SH) {
         not-found-response))))</pre></td></tr><tr><td class="docs"><p>Logic for processing invalid tickets.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn handle-bad-ticket
   []
-  forbidden-response)</pre></td></tr><tr><td class="docs"><p>Various routes we respond to.</p>
+  forbidden-response)</pre></td></tr><tr><td class="docs"><p>Used for logging requests. Returns the response.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn log-event
+  [prefix ticket resource response]
+  (do
+    (log/debug
+      (format &quot;%s (resource: \&quot;%s\&quot;, ticket: \&quot;%s\&quot;, response-code: \&quot;%s\&quot;)&quot;
+        prefix resource ticket (response :status)))
+    response))</pre></td></tr><tr><td class="docs"><p>Wrapper around <code>log-event</code> that adds a positive-sounding
+  prefix to the log message.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn log-success
+  [ticket resource response]
+  (log-event &quot;authorized&quot; ticket resource response))</pre></td></tr><tr><td class="docs"><p>Wrapper around <code>log-event</code> that adds a negative-sounding
+  prefix to the log message.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn log-failure
+  [ticket resource response]
+  (log-event &quot;failed&quot; ticket resource response))</pre></td></tr><tr><td class="docs"><p>Various routes we respond to.</p>
 </td><td class="codes"><pre class="brush: clojure">(defroutes app-routes
   (GET &quot;/reload&quot; [:as request]
     (if (= (request :remote-addr) &quot;127.0.0.1&quot;)
@@ -3110,8 +3126,10 @@ net.brehaut.ClojureTools = (function (SH) {
         (and
           (not (re-find #&quot;\.\.&quot; resource)) ; the resource should not contain &quot;..&quot;
           (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
-        (handle-good-ticket resource)
-        (handle-bad-ticket))))
+        (let [response (handle-good-ticket resource)]
+          (log-success (params :ticket) resource response))
+        (let [response (handle-bad-ticket)]
+          (log-failure (params :ticket) resource response)))))
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))</pre></td></tr><tr><td class="docs"><p>Create the application.</p>
 </td><td class="codes"><pre class="brush: clojure">(def app
@@ -3127,14 +3145,26 @@ net.brehaut.ClojureTools = (function (SH) {
   (deref ticket-store))</pre></td></tr><tr><td class="docs"><p>Create a ticket-store pointing to the memcached host specified
   in the configuration file.</p>
 
-<p>  A ticket-store is a map with at least one value called <code>:get</code>, which
-  should be a 1-ary function that recieves a value from the store.
-  Other keys in the map can be used at will, e.g. for storing a
-  connection.</p>
+<p>  A ticket-store is a map with at least one key:</p>
+
+<ul>
+<li><p><code>:get</code>: 1-ary function used for retrieving a value from the store.</p>
+
+<p>Optional keys:</p></li>
+<li><p><code>:shutdown</code>: 0-ary function which should shutdown any connections
+to the store.</p>
+
+<p>Other keys in the map can be used at will, e.g. for storing a
+connection.</p></li>
+</ul>
 </td><td class="codes"><pre class="brush: clojure">(defn create-ticket-store
   []
-  {:get #(m/get ((get-ticket-store) :connection) %1)
-   :connection (m/bin-connection (config/get-config :memcached))})</pre></td></tr><tr><td class="docs">
+  {:connection (m/bin-connection (config/get-config :memcached))
+   :get #(m/get ((get-ticket-store) :connection) %1)
+   :shutdown #(m/shutdown ((get-ticket-store) :connection))})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn shutdown-ticket-store []
+  (let [shutdown-fn (:shutdown (get-ticket-store))]
+    (if shutdown-fn (shutdown-fn))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn set-ticket-store [new-ticket-store]
   (reset! ticket-store new-ticket-store))</pre></td></tr><tr><td class="docs"><p>Get ticket from memcached, but only if the id is a string with a
   length above 0.</p>
