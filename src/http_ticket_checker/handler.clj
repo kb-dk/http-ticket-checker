@@ -56,26 +56,17 @@
   []
   forbidden-response)
 
+
 (defn log-event
-  "Used for logging requests. Returns the response."
-  [prefix ticket resource response]
-  (do
-    (log/debug
-      (format "%s (resource: \"%s\", ticket: \"%s\", response-code: \"%s\")"
-        prefix resource ticket (response :status)))
-    response))
-
-(defn log-success
-  "Wrapper around `log-event` that adds a positive-sounding
-  prefix to the log message."
-  [ticket resource response]
-  (log-event "authorized" ticket resource response))
-
-(defn log-failure
-  "Wrapper around `log-event` that adds a negative-sounding
-  prefix to the log message."
-  [ticket resource response]
-  (log-event "failed" ticket resource response))
+  "Used for logging requests."
+  [valid-ticket? resource ticket-id status remote-addr]
+  (log/debug
+    (format "%s (resource: \"%s\", ticket: \"%s\", response-code: \"%s\", ip: \"%s\")"
+      (if valid-ticket? "authorized" "invalid ticket")
+      resource
+      ticket-id
+      status
+      remote-addr)))
 
 (defroutes app-routes
   "Various routes we respond to."
@@ -92,18 +83,30 @@
   ; * The resource will be mapped to the resource-var.
   ; * request parameters will end up in the params-map-
   (GET ["/:resource" :resource #"[^?]+"] [:as request resource & params]
-    (let [ticket (tickets/get-ticket (params :ticket))]
-      (if
-        (and
-          (not (re-find #"\.\." resource)) ; the resource should not contain ".."
-          (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
-        (let [response (handle-good-ticket resource)]
-          (log-success (params :ticket) resource response))
-        (let [response (handle-bad-ticket)]
-          (log-failure (params :ticket) resource response)))))
+    (let [ticket (tickets/get-ticket (params :ticket))
+          valid-ticket (tickets/valid-ticket? resource ticket (request :remote-addr))
+          response (if valid-ticket (handle-good-ticket resource) (handle-bad-ticket))]
+      (do
+        (log-event
+          valid-ticket
+          resource
+          (params :ticket)
+          (response :status)
+          (request :remote-addr))
+        response)))
 
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))
+
+;(if
+;  (and
+;    (not (re-find #"\.\." resource))
+;    (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
+;  (let [response (handle-good-ticket resource)]
+;    (log-success (params :ticket) resource response))
+;  (let [response (handle-bad-ticket)]
+;    (log-failure (params :ticket) resource response)))
+
 
 (def app
   "Create the application."

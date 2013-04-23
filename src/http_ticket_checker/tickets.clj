@@ -102,6 +102,7 @@
       (let [parsed_ticket (parse-ticket ticket)]
         (if parsed_ticket
           (and
+            (not (re-find #"\.\." resource)) ; the resource should not contain ".."
             (= ((config/get-config) :presentation_type) (parsed_ticket :presentationType))
             (= user-identifier (parsed_ticket :userIdentifier))
             (not
