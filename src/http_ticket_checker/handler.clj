@@ -38,6 +38,13 @@
      :body "ticket invalid"}
     "text/plain"))
 
+(def internal-error-response
+  "Ring response used for internal errors."
+  (response/content-type
+    {:status 500
+     :body "internal error"}
+    "text/plain"))
+
 (defn handle-good-ticket
   "Logic for processing valid tickets."
   [resource]
@@ -83,17 +90,22 @@
   ; * The resource will be mapped to the resource-var.
   ; * request parameters will end up in the params-map-
   (GET ["/:resource" :resource #"[^?]+"] [:as request resource & params]
-    (let [ticket (tickets/get-ticket (params :ticket))
-          valid-ticket (tickets/valid-ticket? resource ticket (request :remote-addr))
-          response (if valid-ticket (handle-good-ticket resource) (handle-bad-ticket))]
-      (do
-        (log-event
-          valid-ticket
-          resource
-          (params :ticket)
-          (response :status)
-          (request :remote-addr))
-        response)))
+    (try
+      (let [ticket (tickets/get-ticket (params :ticket))
+            valid-ticket (tickets/valid-ticket? resource ticket (request :remote-addr))
+            response (if valid-ticket (handle-good-ticket resource) (handle-bad-ticket))]
+        (do
+          (log-event
+            valid-ticket
+            resource
+            (params :ticket)
+            (response :status)
+            (request :remote-addr))
+          response))
+      (catch net.spy.memcached.OperationTimeoutException e
+        (do
+          (log/error e "Error getting a ticket from memcached.")
+          internal-error-response))))
 
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))
