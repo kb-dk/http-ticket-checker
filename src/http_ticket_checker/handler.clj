@@ -104,7 +104,11 @@
           response))
       (catch net.spy.memcached.OperationTimeoutException e
         (do
-          (log/error e "Error getting a ticket from memcached.")
+          (log/error e "Error getting a ticket from memcached")
+          internal-error-response))
+      (catch Exception e
+        (do
+          (log/error e "Error while processing request")
           internal-error-response))))
 
   ; Respond with not-found-response on 404's.
