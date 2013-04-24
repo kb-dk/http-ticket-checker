@@ -55,14 +55,14 @@
   presentation type and user identifier."
   [raw_ticket]
   (if raw_ticket
-    (let [ticket (json/read-str raw_ticket)]
-      (let [resource_ids (ticket "resources")
-            presentationType (ticket "type")
-            userIdentifier (ticket "userIdentifier")]
-        (if (and resource_ids type userIdentifier)
-          {:resource_ids resource_ids
-           :presentationType presentationType
-           :userIdentifier userIdentifier})))))
+    (let [ticket (json/read-str raw_ticket)
+          resource_ids (ticket "resources")
+          presentationType (ticket "type")
+          userIdentifier (ticket "userIdentifier")]
+      (if (and resource_ids type userIdentifier)
+        {:resource_ids resource_ids
+         :presentationType presentationType
+         :userIdentifier userIdentifier}))))
 
 (defn- get-resource-id
   "Get the resource id from the quested file.
