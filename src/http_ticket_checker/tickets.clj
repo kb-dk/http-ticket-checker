@@ -79,7 +79,7 @@
           #"/"))
       #"\.")))
 
-(defn- shorten-resource-id
+(defn shorten-resource-id
   "Given a list of resource-ids with 'stuff' in front of the uuid,
    return only the uuid-part.
 
