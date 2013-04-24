@@ -88,6 +88,20 @@
   (last
     (clojure.string/split resource_id #":")))
 
+(defn to-boolean
+  "Converts anything to a boolean value.
+
+   Examples:
+
+   * true -> true
+   * false -> false
+   * nil -> false
+   * \"horsie\" -> true
+   * (_be warned_) {} -> true"
+
+  [value]
+  (not (not value)))
+
 (defn valid-ticket?
   "Validate a ticket against the requested resource and user identifier.
 
@@ -97,15 +111,14 @@
    * the requested resource is in the list of resources from the ticket
    * the client ip-adresse matches the user identifier from the ticket."
   [resource ticket user-identifier]
-  (let [resource_id (get-resource-id resource)]
-    (if (and ticket resource_id)
-      (let [parsed_ticket (parse-ticket ticket)]
-        (if parsed_ticket
-          (and
-            (not (re-find #"\.\." resource)) ; the resource should not contain ".."
-            (= ((config/get-config) :presentation_type) (parsed_ticket :presentationType))
-            (= user-identifier (parsed_ticket :userIdentifier))
-            (not
-              (not
-                (some #{resource_id}
-                  (map shorten-resource-id (parsed_ticket :resource_ids)))))))))))
+  (let [resource-id (get-resource-id resource)
+        parsed-ticket (parse-ticket ticket)]
+    (and
+      (to-boolean resource-id)
+      (to-boolean parsed-ticket)
+      (not (re-find #"\.\." resource)) ; the resource should not contain ".."
+      (= ((config/get-config) :presentation_type) (parsed-ticket :presentationType))
+      (= user-identifier (parsed-ticket :userIdentifier))
+      (to-boolean
+        (some #{resource-id}
+          (map shorten-resource-id (parsed-ticket :resource_ids)))))))
