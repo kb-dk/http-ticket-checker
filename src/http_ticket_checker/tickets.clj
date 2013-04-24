@@ -50,7 +50,7 @@
       (> (count ticket_id) 0)
       (((get-ticket-store) :get) ticket_id))))
 
-(defn parse-ticket
+(defn- parse-ticket
   "Parse a ticket from memcached, and return a map with resource ids,
   presentation type and user identifier."
   [raw_ticket]
@@ -64,7 +64,7 @@
            :presentationType presentationType
            :userIdentifier userIdentifier})))))
 
-(defn get-resource-id
+(defn- get-resource-id
   "Get the resource id from the quested file.
    The id is defined as the substring starting
    after the first `/` and ending before the first `.`.
@@ -79,7 +79,7 @@
           #"/"))
       #"\.")))
 
-(defn shorten-resource-id
+(defn- shorten-resource-id
   "Given a list of resource-ids with 'stuff' in front of the uuid,
    return only the uuid-part.
 

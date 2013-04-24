@@ -45,7 +45,7 @@
      :body "internal error"}
     "text/plain"))
 
-(defn handle-good-ticket
+(defn- handle-good-ticket
   "Logic for processing valid tickets."
   [resource]
   (if (config/get-config :use_x_sendfile)
@@ -58,13 +58,13 @@
           "no-cache")
         not-found-response))))
 
-(defn handle-bad-ticket
+(defn- handle-bad-ticket
   "Logic for processing invalid tickets."
   []
   forbidden-response)
 
 
-(defn log-event
+(defn- log-event
   "Used for logging requests."
   [valid-ticket? resource ticket-id status remote-addr]
   (log/debug
