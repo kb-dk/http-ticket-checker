@@ -114,16 +114,6 @@
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))
 
-;(if
-;  (and
-;    (not (re-find #"\.\." resource))
-;    (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
-;  (let [response (handle-good-ticket resource)]
-;    (log-success (params :ticket) resource response))
-;  (let [response (handle-bad-ticket)]
-;    (log-failure (params :ticket) resource response)))
-
-
 (def app
   "Create the application."
   (handler/site app-routes))
