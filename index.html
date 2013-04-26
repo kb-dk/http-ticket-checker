@@ -3078,8 +3078,13 @@ net.brehaut.ClojureTools = (function (SH) {
   (response/content-type
     {:status 403
      :body &quot;ticket invalid&quot;}
+    &quot;text/plain&quot;))</pre></td></tr><tr><td class="docs"><p>Ring response used for internal errors.</p>
+</td><td class="codes"><pre class="brush: clojure">(def internal-error-response
+  (response/content-type
+    {:status 500
+     :body &quot;internal error&quot;}
     &quot;text/plain&quot;))</pre></td></tr><tr><td class="docs"><p>Logic for processing valid tickets.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn handle-good-ticket
+</td><td class="codes"><pre class="brush: clojure">(defn- handle-good-ticket
   [resource]
   (if (config/get-config :use_x_sendfile)
     (response/header {:status 200} &quot;X-Sendfile&quot; (str ((config/get-config) :file_dir) \/ resource))
@@ -3090,24 +3095,18 @@ net.brehaut.ClojureTools = (function (SH) {
           &quot;Cache-Control&quot;
           &quot;no-cache&quot;)
         not-found-response))))</pre></td></tr><tr><td class="docs"><p>Logic for processing invalid tickets.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn handle-bad-ticket
+</td><td class="codes"><pre class="brush: clojure">(defn- handle-bad-ticket
   []
-  forbidden-response)</pre></td></tr><tr><td class="docs"><p>Used for logging requests. Returns the response.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn log-event
-  [prefix ticket resource response]
-  (do
-    (log/debug
-      (format &quot;%s (resource: \&quot;%s\&quot;, ticket: \&quot;%s\&quot;, response-code: \&quot;%s\&quot;)&quot;
-        prefix resource ticket (response :status)))
-    response))</pre></td></tr><tr><td class="docs"><p>Wrapper around <code>log-event</code> that adds a positive-sounding
-  prefix to the log message.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn log-success
-  [ticket resource response]
-  (log-event &quot;authorized&quot; ticket resource response))</pre></td></tr><tr><td class="docs"><p>Wrapper around <code>log-event</code> that adds a negative-sounding
-  prefix to the log message.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn log-failure
-  [ticket resource response]
-  (log-event &quot;failed&quot; ticket resource response))</pre></td></tr><tr><td class="docs"><p>Various routes we respond to.</p>
+  forbidden-response)</pre></td></tr><tr><td class="docs"><p>Used for logging requests.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn- log-event
+  [valid-ticket? resource ticket-id status remote-addr]
+  (log/debug
+    (format &quot;%s (resource: \&quot;%s\&quot;, ticket: \&quot;%s\&quot;, response-code: \&quot;%s\&quot;, ip: \&quot;%s\&quot;)&quot;
+      (if valid-ticket? &quot;authorized&quot; &quot;invalid ticket&quot;)
+      resource
+      ticket-id
+      status
+      remote-addr)))</pre></td></tr><tr><td class="docs"><p>Various routes we respond to.</p>
 </td><td class="codes"><pre class="brush: clojure">(defroutes app-routes
   (GET &quot;/reload&quot; [:as request]
     (if (= (request :remote-addr) &quot;127.0.0.1&quot;)
@@ -3121,15 +3120,26 @@ net.brehaut.ClojureTools = (function (SH) {
   ; * The resource will be mapped to the resource-var.
   ; * request parameters will end up in the params-map-
   (GET [&quot;/:resource&quot; :resource #&quot;[^?]+&quot;] [:as request resource &amp; params]
-    (let [ticket (tickets/get-ticket (params :ticket))]
-      (if
-        (and
-          (not (re-find #&quot;\.\.&quot; resource)) ; the resource should not contain &quot;..&quot;
-          (tickets/valid-ticket? resource ticket (request :remote-addr))) ; remote-addr contains the client ip
-        (let [response (handle-good-ticket resource)]
-          (log-success (params :ticket) resource response))
-        (let [response (handle-bad-ticket)]
-          (log-failure (params :ticket) resource response)))))
+    (try
+      (let [ticket (tickets/get-ticket (params :ticket))
+            valid-ticket (tickets/valid-ticket? resource ticket (request :remote-addr))
+            response (if valid-ticket (handle-good-ticket resource) (handle-bad-ticket))]
+        (do
+          (log-event
+            valid-ticket
+            resource
+            (params :ticket)
+            (response :status)
+            (request :remote-addr))
+          response))
+      (catch net.spy.memcached.OperationTimeoutException e
+        (do
+          (log/error e &quot;Error getting a ticket from memcached&quot;)
+          internal-error-response))
+      (catch Exception e
+        (do
+          (log/error e &quot;Error while processing request&quot;)
+          internal-error-response))))
   ; Respond with not-found-response on 404's.
   (route/not-found not-found-response))</pre></td></tr><tr><td class="docs"><p>Create the application.</p>
 </td><td class="codes"><pre class="brush: clojure">(def app
@@ -3175,22 +3185,22 @@ connection.</p></li>
       (&gt; (count ticket_id) 0)
       (((get-ticket-store) :get) ticket_id))))</pre></td></tr><tr><td class="docs"><p>Parse a ticket from memcached, and return a map with resource ids,
   presentation type and user identifier.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn parse-ticket
+</td><td class="codes"><pre class="brush: clojure">(defn- parse-ticket
   [raw_ticket]
   (if raw_ticket
-    (let [ticket (json/read-str raw_ticket)]
-      (let [resource_ids (ticket &quot;resources&quot;)
-            presentationType (ticket &quot;type&quot;)
-            userIdentifier (ticket &quot;userIdentifier&quot;)]
-        (if (and resource_ids type userIdentifier)
-          {:resource_ids resource_ids
-           :presentationType presentationType
-           :userIdentifier userIdentifier})))))</pre></td></tr><tr><td class="docs"><p>Get the resource id from the quested file.
+    (let [ticket (json/read-str raw_ticket)
+          resource_ids (ticket &quot;resources&quot;)
+          presentationType (ticket &quot;type&quot;)
+          userIdentifier (ticket &quot;userIdentifier&quot;)]
+      (if (and resource_ids type userIdentifier)
+        {:resource_ids resource_ids
+         :presentationType presentationType
+         :userIdentifier userIdentifier}))))</pre></td></tr><tr><td class="docs"><p>Get the resource id from the quested file.
    The id is defined as the substring starting
    after the first <code>/</code> and ending before the first <code>.</code>.</p>
 
 <p>   E.g. <code>a/b/c/d/resource-id-here.something</code>.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn get-resource-id
+</td><td class="codes"><pre class="brush: clojure">(defn- get-resource-id
   [resource]
   (first
     (clojure.string/split
@@ -3205,7 +3215,20 @@ connection.</p></li>
 </td><td class="codes"><pre class="brush: clojure">(defn shorten-resource-id
   [resource_id]
   (last
-    (clojure.string/split resource_id #&quot;:&quot;)))</pre></td></tr><tr><td class="docs"><p>Validate a ticket against the requested resource and user identifier.</p>
+    (clojure.string/split resource_id #&quot;:&quot;)))</pre></td></tr><tr><td class="docs"><p>Converts anything to a boolean value.</p>
+
+<p>   Examples:</p>
+
+<ul>
+<li>true -> true</li>
+<li>false -> false</li>
+<li>nil -> false</li>
+<li>"horsie" -> true</li>
+<li>(<em>be warned</em>) {} -> true</li>
+</ul>
+</td><td class="codes"><pre class="brush: clojure">(defn to-boolean
+  [value]
+  (not (not value)))</pre></td></tr><tr><td class="docs"><p>Validate a ticket against the requested resource and user identifier.</p>
 
 <p>   A ticket is considered valid iff</p>
 
@@ -3216,15 +3239,15 @@ connection.</p></li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn valid-ticket?
   [resource ticket user-identifier]
-  (let [resource_id (get-resource-id resource)]
-    (if (and ticket resource_id)
-      (let [parsed_ticket (parse-ticket ticket)]
-        (if parsed_ticket
-          (and
-            (= ((config/get-config) :presentation_type) (parsed_ticket :presentationType))
-            (= user-identifier (parsed_ticket :userIdentifier))
-            (not
-              (not
-                (some #{resource_id}
-                  (map shorten-resource-id (parsed_ticket :resource_ids)))))))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+  (let [resource-id (get-resource-id resource)
+        parsed-ticket (parse-ticket ticket)]
+    (and
+      (to-boolean resource-id)
+      (to-boolean parsed-ticket)
+      (not (re-find #&quot;\.\.&quot; resource)) ; the resource should not contain &quot;..&quot;
+      (= ((config/get-config) :presentation_type) (parsed-ticket :presentationType))
+      (= user-identifier (parsed-ticket :userIdentifier))
+      (to-boolean
+        (some #{resource-id}
+          (map shorten-resource-id (parsed-ticket :resource_ids)))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
