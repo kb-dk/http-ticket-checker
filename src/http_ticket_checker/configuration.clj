@@ -18,8 +18,10 @@
   (reset! config new-config))
 
 (defn load-config
-  "Load configuration from the file specificed by the environment
-  variable `\"HTTP_TICKET_CHECKER_CONFIG\"`"
-  []
-  (load-file
-    (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))
+  "Load configuration either from the file specificed by the environment
+  variable `\"HTTP_TICKET_CHECKER_CONFIG\"` or from the file name specified."
+  ([]
+    (load-file
+      (System/getenv "HTTP_TICKET_CHECKER_CONFIG")))
+  ([filename]
+    (load-file filename)))
