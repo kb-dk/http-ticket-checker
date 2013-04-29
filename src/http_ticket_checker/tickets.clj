@@ -52,17 +52,17 @@
 
 (defn- parse-ticket
   "Parse a ticket from memcached, and return a map with resource ids,
-  presentation type and user identifier."
+  presentation type and user ip address."
   [raw_ticket]
   (if raw_ticket
     (let [ticket (json/read-str raw_ticket)
           resource_ids (ticket "resources")
           presentationType (ticket "type")
-          userIdentifier (ticket "userIdentifier")]
-      (if (and resource_ids type userIdentifier)
+          ip-address (ticket "ipAddress")]
+      (if (and resource_ids type ip-address)
         {:resource_ids resource_ids
          :presentationType presentationType
-         :userIdentifier userIdentifier}))))
+         :ip-address ip-address}))))
 
 (defn- get-resource-id
   "Get the resource id from the quested file.
@@ -103,20 +103,20 @@
   (not (not value)))
 
 (defn valid-ticket?
-  "Validate a ticket against the requested resource and user identifier.
+  "Validate a ticket against the requested resource and user ip address.
 
    A ticket is considered valid iff
 
    * the presentation-type from configurations matches the one from the ticket
    * the requested resource is in the list of resources from the ticket
-   * the client ip-adresse matches the user identifier from the ticket.
+   * the client ip-adresse matches the user ip address from the ticket.
 
    Example usage:
    <pre><code>(valid-ticket?
      \"/3/5/a/1/35a1aa76-97a1-4f1b-b5aa-ad2a246eeeec.snapshot.0.jpeg\"
      (get-ticket \"here-be-a-ticket-id\")
      \"127.0.0.1\")</code></pre>"
-  [resource ticket user-identifier]
+  [resource ticket ip-address]
   (let [resource-id (get-resource-id resource)
         parsed-ticket (parse-ticket ticket)]
     (and
@@ -124,7 +124,7 @@
       (to-boolean parsed-ticket)
       (not (re-find #"\.\." resource)) ; the resource should not contain ".."
       (= ((config/get-config) :presentation_type) (parsed-ticket :presentationType))
-      (= user-identifier (parsed-ticket :userIdentifier))
+      (= ip-address (parsed-ticket :ip-address))
       (to-boolean
         (some #{resource-id}
           (map shorten-resource-id (parsed-ticket :resource_ids)))))))

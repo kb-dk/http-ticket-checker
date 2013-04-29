@@ -10,38 +10,38 @@
   (testing "valid-ticket? with valid ticket"
     (let [ticket (tickets/get-ticket "ticket-a")
           resource thumbnail-a
-          user-identifier user-identifier-a]
-      (is (tickets/valid-ticket? resource ticket user-identifier))))
+          ip-address ip-address-a]
+      (is (tickets/valid-ticket? resource ticket ip-address))))
 
   (testing "valid-ticket? with invalid ticket"
     (let [ticket (tickets/get-ticket "ticket-a")
           resource thumbnail-b
-          user-identifier user-identifier-a]
-      (is (not (tickets/valid-ticket? resource ticket user-identifier)))))
+          ip-address ip-address-a]
+      (is (not (tickets/valid-ticket? resource ticket ip-address)))))
 
   (testing "valid-ticket? without ticket"
     (let [ticket nil
           resource thumbnail-a
-          user-identifier user-identifier-a]
-      (is (not (tickets/valid-ticket? resource ticket user-identifier)))))
+          ip-address ip-address-a]
+      (is (not (tickets/valid-ticket? resource ticket ip-address)))))
 
-  (testing "valid-ticket? with invalid user-identifier"
+  (testing "valid-ticket? with invalid user ip address"
     (let [ticket (tickets/get-ticket "ticket-a")
           resource thumbnail-a
-          user-identifier user-identifier-b]
-      (is (not (tickets/valid-ticket? resource ticket user-identifier)))))
+          ip-address ip-address-b]
+      (is (not (tickets/valid-ticket? resource ticket ip-address)))))
 
   (testing "valid-ticket? with invalid resource"
     (let [ticket (tickets/get-ticket "ticket-a")
           resource thumbnail-b
-          user-identifier (ticket-a "userIdentifier")]
-      (is (not (tickets/valid-ticket? resource ticket user-identifier)))))
+          ip-address (ticket-a "ipAddress")]
+      (is (not (tickets/valid-ticket? resource ticket ip-address)))))
 
   (testing "valid-ticket? with invalid presentation-type"
     (let [ticket (json/write-str (assoc ticket-a "type" "elephant"))
           resource thumbnail-a
-          user-identifier (ticket-a "userIdentifier")]
-      (is (not (tickets/valid-ticket? resource ticket user-identifier))))))
+          ip-address (ticket-a "ipAddress")]
+      (is (not (tickets/valid-ticket? resource ticket ip-address))))))
 
 (deftest test-shorten-resource-id
   (testing "foo"

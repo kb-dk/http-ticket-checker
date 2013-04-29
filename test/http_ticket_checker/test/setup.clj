@@ -29,20 +29,20 @@
 (def long-resource-id-b "doms_reklamefilm:uuid:elephant")
 (def presentation-type-a "Thumbnails")
 (def presentation-type-b "Stream")
-(def user-identifier-a "localhost")
-(def user-identifier-b "130.225.24.24")
+(def ip-address-a "localhost")
+(def ip-address-b "130.225.24.24")
 
 (defn create-ticket
-  [resources presentation-type user-identifier]
+  [resources presentation-type ip-address]
   {"resources" resources
    "type" presentation-type
-   "userIdentifier" user-identifier})
+   "ipAddress" ip-address})
 
 (def ticket-a
-  (create-ticket [long-resource-id-a] presentation-type-a user-identifier-a))
+  (create-ticket [long-resource-id-a] presentation-type-a ip-address-a))
 
 (def ticket-b
-  (create-ticket [long-resource-id-b] presentation-type-b user-identifier-b))
+  (create-ticket [long-resource-id-b] presentation-type-b ip-address-b))
 
 (set-ticket "ticket-a" (json/write-str ticket-a))
 (set-ticket "ticket-b" (json/write-str ticket-b))
