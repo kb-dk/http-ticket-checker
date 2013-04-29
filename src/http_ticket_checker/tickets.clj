@@ -109,7 +109,13 @@
 
    * the presentation-type from configurations matches the one from the ticket
    * the requested resource is in the list of resources from the ticket
-   * the client ip-adresse matches the user identifier from the ticket."
+   * the client ip-adresse matches the user identifier from the ticket.
+
+   Example usage:
+   <pre><code>(valid-ticket?
+     \"/3/5/a/1/35a1aa76-97a1-4f1b-b5aa-ad2a246eeeec.snapshot.0.jpeg\"
+     (get-ticket \"here-be-a-ticket-id\")
+     \"127.0.0.1\")</code></pre>"
   [resource ticket user-identifier]
   (let [resource-id (get-resource-id resource)
         parsed-ticket (parse-ticket ticket)]
