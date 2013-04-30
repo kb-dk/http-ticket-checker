@@ -15,7 +15,8 @@ using the `X-Sendfile` header.
 
 ## Prerequisites
 
-You will need [Leiningen][1] 2.x installed.
+You will need [Leiningen][1] 2.x installed to build and package
+http-ticket-checker.
 
 [1]: https://github.com/technomancy/leiningen
 
@@ -24,6 +25,18 @@ You will need [Leiningen][1] 2.x installed.
 To start a web server for the application, run:
 
     lein ring server
+
+## Creating a war package
+
+From the project directory, run:
+
+    lein ring uberwar
+
+## Running on Tomcat
+
+Add the following to `bin/setenv.sh`:
+
+    export HTTP_TICKET_CHECKER_CONFIG=/path/to/configuration.clj
 
 ## Generating documentation
 
