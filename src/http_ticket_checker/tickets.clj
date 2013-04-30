@@ -44,24 +44,24 @@
 (defn get-ticket
   "Get ticket from memcached, but only if the id is a string with a
   length above 0."
-  [raw_ticket_id]
-  (let [ticket_id (str raw_ticket_id)]
+  [raw-ticket-id]
+  (let [ticket-id (str raw-ticket-id)]
     (if
-      (> (count ticket_id) 0)
-      (((get-ticket-store) :get) ticket_id))))
+      (> (count ticket-id) 0)
+      (((get-ticket-store) :get) ticket-id))))
 
 (defn- parse-ticket
   "Parse a ticket from memcached, and return a map with resource ids,
   presentation type and user ip address."
-  [raw_ticket]
-  (if raw_ticket
-    (let [ticket (json/read-str raw_ticket)
-          resource_ids (ticket "resources")
-          presentationType (ticket "type")
+  [raw-ticket]
+  (if raw-ticket
+    (let [ticket (json/read-str raw-ticket)
+          resource-ids (ticket "resources")
+          presentation-type (ticket "type")
           ip-address (ticket "ipAddress")]
-      (if (and resource_ids type ip-address)
-        {:resource_ids resource_ids
-         :presentationType presentationType
+      (if (and resource-ids type ip-address)
+        {:resource-ids resource-ids
+         :presentation-type presentation-type
          :ip-address ip-address}))))
 
 (defn- get-resource-id
@@ -84,9 +84,9 @@
    return only the uuid-part.
 
    E.g. uuid:abcd -> abcd."
-  [resource_id]
+  [resource-id]
   (last
-    (clojure.string/split resource_id #":")))
+    (clojure.string/split resource-id #":")))
 
 (defn to-boolean
   "Converts anything to a boolean value.
@@ -123,8 +123,8 @@
       (to-boolean resource-id)
       (to-boolean parsed-ticket)
       (not (re-find #"\.\." resource)) ; the resource should not contain ".."
-      (= ((config/get-config) :presentation_type) (parsed-ticket :presentationType))
+      (= ((config/get-config) :presentation-type) (parsed-ticket :presentation-type))
       (= ip-address (parsed-ticket :ip-address))
       (to-boolean
         (some #{resource-id}
-          (map shorten-resource-id (parsed-ticket :resource_ids)))))))
+          (map shorten-resource-id (parsed-ticket :resource-ids)))))))

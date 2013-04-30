@@ -1,4 +1,4 @@
 {:memcached "localhost:11211"
- :file_dir "/foo/bar/files"
- :presentation_type "Thumbnails"
- :use_x_sendfile false}
+ :file-dir "/foo/bar/files"
+ :presentation-type "Thumbnails"
+ :use-x_sendfile false}

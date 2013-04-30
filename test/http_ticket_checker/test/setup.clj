@@ -8,7 +8,7 @@
 
 
 ;; set the minimum necessary config
-(config/set-config {:presentation_type "Thumbnails"})
+(config/set-config {:presentation-type "Thumbnails"})
 
 (defn create-mock-ticket-store
   []

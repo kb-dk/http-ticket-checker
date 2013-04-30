@@ -48,9 +48,9 @@
 (defn- handle-good-ticket
   "Logic for processing valid tickets."
   [resource]
-  (if (config/get-config :use_x_sendfile)
-    (response/header {:status 200} "X-Sendfile" (str ((config/get-config) :file_dir) \/ resource))
-    (let [response (response/file-response resource {:root ((config/get-config) :file_dir)})]
+  (if (config/get-config :use_x-sendfile)
+    (response/header {:status 200} "X-Sendfile" (str ((config/get-config) :file-dir) \/ resource))
+    (let [response (response/file-response resource {:root ((config/get-config) :file-dir)})]
       (if response
         (response/header
           response
