@@ -3,6 +3,11 @@
   Tickets are retrieved from memcached, deserialized from json, and compared with the requested resource,
   client ip-address, and the configured presentation-type."
   :url "http://statsbiblioteket.github.io/http-ticket-checker/"
+  :license {:name "The Apache Software License, Version 2.0"
+            :url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            :distribution :repo
+            :comments "A business-friendly OSS license"}
+
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/data.json "0.2.2"]
                  [org.clojure/tools.logging "0.2.6"]
