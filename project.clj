@@ -1,4 +1,4 @@
-(defproject dk.statsbiblioteket.medieplatform/http-ticket-checker "1.0"
+(defproject dk.statsbiblioteket.medieplatform/http-ticket-checker "1.1"
   :description "HTTP-ticket-checker is a web-application that serves resources iff the supplied ticket is valid.
   Tickets are retrieved from memcached, deserialized from json, and compared with the requested resource,
   client ip-address, and the configured presentation-type."
@@ -10,7 +10,7 @@
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/data.json "0.2.2"]
-                 [org.clojure/tools.logging "0.2.6"]
+                 [com.taoensso/timbre "1.6.0"]
                  [compojure "1.1.5"]
                  [clojurewerkz/spyglass "1.0.2"]]
   :scm {:url "git@github.com:statsbiblioteket/http-ticket-checker.git"}

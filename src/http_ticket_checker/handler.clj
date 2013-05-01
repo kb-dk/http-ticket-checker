@@ -8,7 +8,7 @@
             [compojure.handler :as handler]
             [compojure.route :as route]
             [clojurewerkz.spyglass.client :as m]
-            [clojure.tools.logging :as log]))
+            [taoensso.timbre :as log]))
 
 
 (defn init
@@ -16,7 +16,8 @@
   []
   (do
     (config/set-config (config/load-config))
-    (tickets/set-ticket-store (tickets/create-ticket-store))))
+    (tickets/set-ticket-store (tickets/create-ticket-store))
+    (log/merge-config! (config/get-config :logging))))
 
 (defn destroy
   "Shutdown the connection to memcached, and clear the configuration."

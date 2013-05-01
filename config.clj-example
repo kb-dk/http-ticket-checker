@@ -1,4 +1,5 @@
 {:memcached "localhost:11211"
  :file-dir "/foo/bar/files"
  :presentation-type "Thumbnails"
- :use-x_sendfile false}
+ :use-x_sendfile false
+ :logging {:current-level :debug}}
