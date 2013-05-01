@@ -3030,7 +3030,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>http-ticket-checker -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">http-ticket-checker</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>HTTP-ticket-checker is a web-application that serves resources iff the supplied ticket is valid.
+</script><title>dk.statsbiblioteket.medieplatform/http-ticket-checker -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">dk.statsbiblioteket.medieplatform/http-ticket-checker</h1><h2 class="project-version">1.0</h2><br /><p>HTTP-ticket-checker is a web-application that serves resources iff the supplied ticket is valid.
   Tickets are retrieved from memcached, deserialized from json, and compared with the requested resource,
   client ip-address, and the configured presentation-type.</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">org.clojure/data.json</td><td class="dotted"><hr /></td><td class="dep-version">0.2.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.6</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">clojurewerkz/spyglass</td><td class="dotted"><hr /></td><td class="dep-version">1.0.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#http-ticket-checker.configuration">http-ticket-checker.configuration</a></li><li><a href="#http-ticket-checker.handler">http-ticket-checker.handler</a></li><li><a href="#http-ticket-checker.tickets">http-ticket-checker.tickets</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#http-ticket-checker.configuration" name="http-ticket-checker.configuration"><h1 class="project-name">http-ticket-checker.configuration</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Handling of configuration.</h2>
@@ -3044,12 +3044,14 @@ net.brehaut.ClojureTools = (function (SH) {
   ([key] ((get-config) key)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn set-config
   [new-config]
-  (reset! config new-config))</pre></td></tr><tr><td class="docs"><p>Load configuration from the file specificed by the environment
-  variable <code>"HTTP_TICKET_CHECKER_CONFIG"</code></p>
+  (reset! config new-config))</pre></td></tr><tr><td class="docs"><p>Load configuration either from the file specificed by the environment
+  variable <code>"HTTP_TICKET_CHECKER_CONFIG"</code> or from the file name specified.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn load-config
-  []
-  (load-file
-    (System/getenv &quot;HTTP_TICKET_CHECKER_CONFIG&quot;)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#http-ticket-checker.handler" name="http-ticket-checker.handler"><h1 class="project-name">http-ticket-checker.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>HTTP requests and -responses, other tidbits in connection with ring.</h2>
+  ([]
+    (load-file
+      (System/getenv &quot;HTTP_TICKET_CHECKER_CONFIG&quot;)))
+  ([filename]
+    (load-file filename)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#http-ticket-checker.handler" name="http-ticket-checker.handler"><h1 class="project-name">http-ticket-checker.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>HTTP requests and -responses, other tidbits in connection with ring.</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns http-ticket-checker.handler
   (:use [compojure.core])
@@ -3086,9 +3088,9 @@ net.brehaut.ClojureTools = (function (SH) {
     &quot;text/plain&quot;))</pre></td></tr><tr><td class="docs"><p>Logic for processing valid tickets.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- handle-good-ticket
   [resource]
-  (if (config/get-config :use_x_sendfile)
-    (response/header {:status 200} &quot;X-Sendfile&quot; (str ((config/get-config) :file_dir) \/ resource))
-    (let [response (response/file-response resource {:root ((config/get-config) :file_dir)})]
+  (if (config/get-config :use_x-sendfile)
+    (response/header {:status 200} &quot;X-Sendfile&quot; (str ((config/get-config) :file-dir) \/ resource))
+    (let [response (response/file-response resource {:root ((config/get-config) :file-dir)})]
       (if response
         (response/header
           response
@@ -3179,23 +3181,23 @@ connection.</p></li>
   (reset! ticket-store new-ticket-store))</pre></td></tr><tr><td class="docs"><p>Get ticket from memcached, but only if the id is a string with a
   length above 0.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-ticket
-  [raw_ticket_id]
-  (let [ticket_id (str raw_ticket_id)]
+  [raw-ticket-id]
+  (let [ticket-id (str raw-ticket-id)]
     (if
-      (&gt; (count ticket_id) 0)
-      (((get-ticket-store) :get) ticket_id))))</pre></td></tr><tr><td class="docs"><p>Parse a ticket from memcached, and return a map with resource ids,
-  presentation type and user identifier.</p>
+      (&gt; (count ticket-id) 0)
+      (((get-ticket-store) :get) ticket-id))))</pre></td></tr><tr><td class="docs"><p>Parse a ticket from memcached, and return a map with resource ids,
+  presentation type and user ip address.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- parse-ticket
-  [raw_ticket]
-  (if raw_ticket
-    (let [ticket (json/read-str raw_ticket)
-          resource_ids (ticket &quot;resources&quot;)
-          presentationType (ticket &quot;type&quot;)
-          userIdentifier (ticket &quot;userIdentifier&quot;)]
-      (if (and resource_ids type userIdentifier)
-        {:resource_ids resource_ids
-         :presentationType presentationType
-         :userIdentifier userIdentifier}))))</pre></td></tr><tr><td class="docs"><p>Get the resource id from the quested file.
+  [raw-ticket]
+  (if raw-ticket
+    (let [ticket (json/read-str raw-ticket)
+          resource-ids (ticket &quot;resources&quot;)
+          presentation-type (ticket &quot;type&quot;)
+          ip-address (ticket &quot;ipAddress&quot;)]
+      (if (and resource-ids type ip-address)
+        {:resource-ids resource-ids
+         :presentation-type presentation-type
+         :ip-address ip-address}))))</pre></td></tr><tr><td class="docs"><p>Get the resource id from the quested file.
    The id is defined as the substring starting
    after the first <code>/</code> and ending before the first <code>.</code>.</p>
 
@@ -3213,9 +3215,9 @@ connection.</p></li>
 
 <p>   E.g. uuid:abcd -> abcd.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn shorten-resource-id
-  [resource_id]
+  [resource-id]
   (last
-    (clojure.string/split resource_id #&quot;:&quot;)))</pre></td></tr><tr><td class="docs"><p>Converts anything to a boolean value.</p>
+    (clojure.string/split resource-id #&quot;:&quot;)))</pre></td></tr><tr><td class="docs"><p>Converts anything to a boolean value.</p>
 
 <p>   Examples:</p>
 
@@ -3228,26 +3230,33 @@ connection.</p></li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn to-boolean
   [value]
-  (not (not value)))</pre></td></tr><tr><td class="docs"><p>Validate a ticket against the requested resource and user identifier.</p>
+  (not (not value)))</pre></td></tr><tr><td class="docs"><p>Validate a ticket against the requested resource and user ip address.</p>
 
 <p>   A ticket is considered valid iff</p>
 
 <ul>
 <li>the presentation-type from configurations matches the one from the ticket</li>
 <li>the requested resource is in the list of resources from the ticket</li>
-<li>the client ip-adresse matches the user identifier from the ticket.</li>
+<li><p>the client ip-adresse matches the user ip address from the ticket.</p>
+
+<p>Example usage:</p>
+
+<pre><code>(valid-ticket?
+ "/3/5/a/1/35a1aa76-97a1-4f1b-b5aa-ad2a246eeeec.snapshot.0.jpeg"
+ (get-ticket "here-be-a-ticket-id")
+ "127.0.0.1")</code></pre></li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn valid-ticket?
-  [resource ticket user-identifier]
+  [resource ticket ip-address]
   (let [resource-id (get-resource-id resource)
         parsed-ticket (parse-ticket ticket)]
     (and
       (to-boolean resource-id)
       (to-boolean parsed-ticket)
       (not (re-find #&quot;\.\.&quot; resource)) ; the resource should not contain &quot;..&quot;
-      (= ((config/get-config) :presentation_type) (parsed-ticket :presentationType))
-      (= user-identifier (parsed-ticket :userIdentifier))
+      (= ((config/get-config) :presentation-type) (parsed-ticket :presentation-type))
+      (= ip-address (parsed-ticket :ip-address))
       (to-boolean
         (some #{resource-id}
-          (map shorten-resource-id (parsed-ticket :resource_ids)))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+          (map shorten-resource-id (parsed-ticket :resource-ids)))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
