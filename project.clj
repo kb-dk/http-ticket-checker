@@ -1,4 +1,4 @@
-(defproject dk.statsbiblioteket.medieplatform/http-ticket-checker "1.1"
+(defproject dk.statsbiblioteket.medieplatform/http-ticket-checker "1.1-SNAPSHOT"
   :description "HTTP-ticket-checker is a web-application that serves resources iff the supplied ticket is valid.
   Tickets are retrieved from memcached, deserialized from json, and compared with the requested resource,
   client ip-address, and the configured presentation-type."
