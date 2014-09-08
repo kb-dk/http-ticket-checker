@@ -8,6 +8,8 @@
             :distribution :repo
             :comments "A business-friendly OSS license"}
 
+  :repositories {"sbforge" "https://sbforge.org/nexus/content/groups/public"}
+  
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/data.json "0.2.2"]
                  [com.taoensso/timbre "1.6.0"]

@@ -20,6 +20,12 @@ http-ticket-checker.
 
 [1]: https://github.com/technomancy/leiningen
 
+## To work in Eclipse:
+
+* Install CounterClockWise according to http://doc.ccw-ide.org/documentation.html#install-as-plugin
+* File->New->General->Project, provide name, disable default location and point to the git workspace.
+* Right-click on new project in Eclipse, Configure->Convert to Leiningen.  
+
 ## Running
 
 To start a web server for the application, run:
